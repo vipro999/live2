@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Get Coins">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<title>Collect Rewards</title>
+<style>
+*{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;margin:0;padding:0}
+body{background:#fff;color:#111;display:flex;flex-direction:column;align-items:center;padding:8px;max-width:480px;margin:0 auto;}
+header{width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-top:env(safe-area-inset-top)}
+header img{height:32px}
+header h1{font-size:1.3rem;font-weight:700;text-align:center;position:absolute;left:50%;transform:translateX(-50%)}
+.stats{width:100%;background:#f9f9f9;padding:12px;border-radius:10px;margin-bottom:14px;box-shadow:0 2px 6px rgba(0,0,0,0.04)}
+.stats div{font-weight:700}
+.input-section{width:100%;margin-bottom:12px}
+.input-section input{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:1rem}
+.coins-grid{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.coin-card{border:1px solid #e6e6e9;border-radius:10px;padding:12px;text-align:center;cursor:pointer;background:#fff;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:8px}
+.coin-card:active{transform:scale(.98)}
+.coin-card.active{border:2px solid #ff0050;background:linear-gradient(180deg,#fff7fb,#fff)}
+.coin-top{display:flex;align-items:center;gap:8px;font-weight:800}
+.coin-top img{width:20px;height:20px}
+.price{color:#666;font-size:0.92rem}
+.total{font-weight:700;margin:12px 0;font-size:1.05rem}
+.btn{width:100%;background:#ff0050;color:#fff;border:none;padding:12px;border-radius:10px;font-weight:700;cursor:pointer;font-size:1rem}
+.overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.32);z-index:50;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.overlay.show{display:flex;animation:fadeIn .2s ease-in-out}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.panel{background:#fff;border-radius:14px;padding:18px;width:calc(100% - 40px);max-width:420px;text-align:center;box-shadow:0 18px 60px rgba(0,0,0,.25)}
+.success-icon{width:86px;height:86px;border-radius:50%;background:linear-gradient(135deg,#07b36e,#05a66a);display:flex;align-items:center;justify-content:center;color:#fff;font-size:40px;margin:0 auto 12px;box-shadow:0 12px 40px rgba(6,166,107,.18)}
+.header-left{display:flex;align-items:center;width:100%;padding:10px 16px;box-sizing:border-box;gap:8px}
+.logo{height:32px}
+.tiktok-username{font-weight:600;font-size:1rem}
+.history-link{margin-left:auto;text-decoration:none;color:#007bff;font-size:0.9rem}
+
+/* 🔹 Payment Section */
+.payment-section{width:100%;margin-top:14px;text-align:center}
+.pay-btn{background:#007bff;color:#fff;border:none;padding:12px 16px;border-radius:10px;font-weight:700;cursor:pointer;font-size:1rem;transition:.2s}
+.pay-btn:hover{background:#005fcc}
+
+/* 🔹 Order Summary Popup */
+#orderSummaryOverlay .panel h3{margin-bottom:10px;text-align:center;}
+.payment-option{border:1px solid #ddd;border-radius:8px;padding:8px;margin-top:8px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:.2s;text-align:center;justify-content:center;}
+.payment-option:hover{border-color:#007bff;background:#f2f8ff}
+.payment-option span{font-weight:600}
+.cancel-btn{margin-top:12px;padding:10px 16px;border:none;background:#ccc;color:#111;border-radius:10px;cursor:pointer;font-weight:600}
+.cancel-btn:hover{background:#bbb}
+
+/* 🔄 Loading Spinner */
+.loading-spinner {
+  border: 4px solid #eee;
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+.pay-method {
+  font-family: system-ui, sans-serif;
+  color: #333;
+}
+
+.label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.card-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f7f7f7;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.card-icon {
+  width: 32px;
+  height: auto;
+}
+
+.card-number {
+  font-size: 15px;
+  letter-spacing: 1px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@media(max-width:420px){.coins-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header><h1 class="title">Gift To</h1></header>
+
+<div class="header-left">
+<img src="daidien2.png" alt="avatar" class="logo" style="width:20px;height:20px;border-radius:50%;" />
+<span class="tiktok-username">medd******</span>
+<a href="#" class="history-link">View history</a>
+</div>
+
+<div class="stats" aria-live="polite" style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;">
+  <div style="display:flex;align-items:center;gap:6px;">
+    <div style="font-weight:800;font-size:1.1rem; margin-left:26px">
+      <span id="totalCoins">300,000,000</span> <img src="coin.png" alt="coin icon" width="18" height="18"/>
+    </div>
+  </div>
+ <div id="totalUsd" style="visibility:hidden; height:16px;"> </div>
+</div>
+
+<div class="input-section">
+  <input id="tiktokId" type="text" placeholder="Enter username"/>
+</div>
+
+<div class="coins-grid" id="coinGrid"></div>
+
+<!-- ✅ Payment Button -->
+<div class="payment-section">
+  <button id="proceedBtn" class="pay-btn">Continue</button>
+</div>
+
+<div class="total">Total: $<span id="total">0.00</span></div>
+
+<!-- ✅ Order Summary Overlay -->
+<div id="orderSummaryOverlay" class="overlay" aria-hidden="true">
+  <div class="panel" style="text-align:left;">
+    <h3>Order Summary</h3>
+
+    <div style="border:1px solid #ddd;border-radius:12px;padding:14px;margin-top:10px;background:#fafafa;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span>Selected Package:</span>
+        <strong id="summaryPackage">-</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span>Service Fee:</span>
+        <strong>$0.00</strong>
+      </div>
+      <hr style="margin:10px 0;">
+      <div style="display:flex;justify-content:space-between;font-weight:700;">
+        <span>Total:</span>
+        <span id="summaryTotal">$0.00</span>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;text-align:center;">
+  <div class="pay-method">
+  <span class="label">Pay method</span>
+  <div class="card-line">
+    <img src="https://cdn-icons-png.flaticon.com/512/349/349230.png" alt="Visa" class="card-icon">
+    <span class="card-number">Visa •••• •••• •••• 5674</span>
+  </div>
+</div>
+
+      <div class="payment-option" data-method="Appple"><span>Recharge</span></div>
+    </div>
+
+    <button id="cancelSummary" class="cancel-btn" style="margin-top:14px;width:100%;">Back</button>
+  </div>
+</div>
+
+<!-- ✅ Loading / Processing Overlay -->
+<div id="loadingOverlay" class="overlay" aria-hidden="true">
+  <div class="panel" style="text-align:center;">
+    <div class="loading-spinner"></div>
+    <div style="font-weight:600;font-size:1.1rem;">Processing...</div>
+  </div>
+</div>
+
+<!-- ✅ Success Overlay -->
+<div id="successOverlay" class="overlay" aria-hidden="true">
+  <div class="panel">
+    <div class="success-icon">✓</div>
+    <div style="font-weight:800;font-size:18px;margin-bottom:8px">Payment Suscess</div>
+    <div id="successText" style="color:#444;margin-bottom:12px"></div>
+    <button id="backBtn" class="btn" style="background:#007bff;">Back to Home</button>
+  </div>
+</div>
+
+<script>
+const packages=[{amount:30},{amount:300},{amount:1000},{amount:10000},{amount:100000}, {amount:500000}];
+const baseCoins=30, baseUSD=0.31;
+const unitPrice=baseUSD/baseCoins;
+const coinGrid=document.getElementById('coinGrid');
+const totalEl=document.getElementById('total');
+const totalCoinsEl=document.getElementById('totalCoins');
+let totalCoins=300000000, selectedPackage=null;
+
+function usdFormat(n){return n.toFixed(2);}
+function updateTotalsUI(){
+  totalCoinsEl.textContent=totalCoins.toLocaleString();
+  const totalUsd=totalCoins*unitPrice;
+  document.getElementById('totalUsd').textContent=`≈ $${totalUsd.toFixed(2)}`;
+}
+updateTotalsUI();
+
+/* Render gói coin */
+function renderPackages(){
+  packages.forEach(p=>{
+    const price=+(unitPrice*p.amount).toFixed(2);
+    const card=document.createElement('div');
+    card.className='coin-card';
+    card.innerHTML=`<div class="coin-top"><img src="coin.png"> ${p.amount}</div><div class="price">$${usdFormat(price)}</div>`;
+    card.onclick=()=>{
+      document.querySelectorAll('.coin-card').forEach(c=>c.classList.remove('active'));
+      card.classList.add('active');
+      selectedPackage={amount:p.amount,price};
+      totalEl.textContent=usdFormat(price);
+    };
+    coinGrid.appendChild(card);
+  });
+}
+renderPackages();
+
+/* Popup Order Summary */
+const proceedBtn=document.getElementById('proceedBtn');
+const orderSummaryOverlay=document.getElementById('orderSummaryOverlay');
+const cancelSummary=document.getElementById('cancelSummary');
+const paymentChoices=orderSummaryOverlay.querySelectorAll('.payment-option');
+const successOverlay=document.getElementById('successOverlay');
+const successText=document.getElementById('successText');
+const backBtn=document.getElementById('backBtn');
+
+proceedBtn.onclick=()=>{
+  const tiktokId=document.getElementById('tiktokId');
+  if(!selectedPackage){alert('Please select a coin package first.');return;}
+  if(!tiktokId.value.trim()){alert('Please enter your TikTok username first.');return;}
+  document.getElementById('summaryPackage').textContent=`${selectedPackage.amount} Coins`;
+  document.getElementById('summaryTotal').textContent=`$${usdFormat(selectedPackage.price)}`;
+  orderSummaryOverlay.classList.add('show');
+};
+
+cancelSummary.onclick=()=>{orderSummaryOverlay.classList.remove('show');};
+
+/* 🔄 Payment process with loading effect */
+paymentChoices.forEach(opt=>{
+  opt.onclick=()=>{
+    const method=opt.getAttribute('data-method');
+    orderSummaryOverlay.classList.remove('show');
+
+    const loadingOverlay=document.getElementById('loadingOverlay');
+    loadingOverlay.classList.add('show');
+
+    setTimeout(()=>{
+      loadingOverlay.classList.remove('show');
+      totalCoins-=selectedPackage.amount;
+      updateTotalsUI();
+     const username = document.getElementById('tiktokId').value.trim();
+successText.innerHTML=`
+  You recharge Coins. You can use Coins to send vituarl gift.
+`;
+
+      successOverlay.classList.add('show');
+    },1000);
+  };
+});
+
+backBtn.onclick=()=>{
+  successOverlay.classList.remove('show');
+  document.getElementById('tiktokId').value='';
+  totalEl.textContent='0.00';
+  document.querySelectorAll('.coin-card').forEach(x=>x.classList.remove('active'));
+  selectedPackage=null;
+};
+</script>
+</body>
+</html>
